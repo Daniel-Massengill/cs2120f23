@@ -1,3 +1,5 @@
+namespace lecture_03_04 
+
 /-!
 Note: These notes are not yet complete. They
 current extend the material presented at the
@@ -74,7 +76,7 @@ def id_poly : (α : Type) → α → α
 def id_poly' (α : Type) : α → α 
 | v => v
 
-/-
+/-!
 The key idea in play here is that we bind a name, 
 α, to the value of the (first) type parameter, and,
 having done that, we then express the rest of the 
@@ -185,9 +187,19 @@ be returned.
 #eval id_poly'' "Hello!"   -- α = String, inferred!
 #eval id_poly'' true       -- α = Bool, inferred!
 
-#eval id_poly'' Nat 7          -- α = Nat, inferred!
-#eval id_poly'' String "Hello!"   -- α = String, inferred!
-#eval id_poly'' Bool true       -- α = Bool, inferred!
+#eval id_poly'' Nat 7             -- error
+#eval id_poly'' String "Hello!"   -- error
+#eval id_poly'' Bool true         -- error
+
+/-!
+Sometimes we will have to give type arguments
+explicitly, even when they're declared to be
+implicit. In these cases, we disable implicit
+argument inference, In Lean, by writing an @
+before the given expression. Note that in the
+following examples we once again can, and must,
+give the type argument values explicitly. 
+-/
 
 #eval @id_poly'' Nat 7          -- α = Nat, inferred!
 #eval @id_poly'' String "Hello!"   -- α = String, inferred!
@@ -196,33 +208,31 @@ be returned.
 /-!
 ## Extended Example: A polymorphic apply2 function
 
-We'll now work up to defining a polymorphic function,
+We'll now work up to defining a *polymorphic* function,
 apply2, that takes as its arguments a function, f, 
 and a value, a, and that returns the result of applying
 f to a twice: that it, it returns the value of f (f a).
 
 ### A Natty Example
 
-We'll define apply2 as a function that takes a 
+We'll define apply2_nat as a function that takes a 
 function, f, and an argument, a, to that function 
 as its arguments, and that then returns the result 
 of applying the function f to the argument a twice.
 That is, apply will return the value of f (f a).
 
 As an example, if f is the function, Nat.succ, that 
-returns one more than a given natural number a, the 
-result of "applying f twice to 0" is *succ (succ 0)*,
-where inner expression reduces to 1 and the successor
-of that is 2. That's the result.
+returns *one more than* a given natural number a, the 
+result of "applying f twice to 0" is 2. 
 
-Let's write this apply2 function where the function
-and argument values are Natty. We define *apply2_nat*
+Let's write this apply2_nat function where the function
+and its argument values are Natty. We define *apply2_nat*
 that takes (1) a function, *f : Nat → Nat*, and (2) a 
 second argument, *a : Nat*, and that returns a result 
-of applying f twice to a: namely *f (f a)*. 
+of applying f twice to a: namely *f (f a)*, also a Nat. 
 -/
 
--- This apply2 version is specialized for Natty values                         f         a
+-- This apply2 version is specialized for "Natty" values                         f         a
 def apply2_nat : (Nat → Nat) → Nat → Nat
 | f, a => f (f a)
 
@@ -238,6 +248,7 @@ argument.
 #check (Nat.succ)           -- Nat → Nat
 #eval Nat.succ 0            -- 1
 #eval apply2_nat Nat.succ 0 -- expect 2
+#eval apply2_nat Nat.succ 3 -- expect 5
 
 /-!
 Yay, it seems to work. It gets more interesting when we
@@ -304,11 +315,11 @@ string argument values.
 You can make up your own String → String functions.
 For example, a function, exclaim : String → String,
 applied to a string, s, could return (append s "!"). 
-There is a notation: *s ++ "!"*. 
+There is an infix notation: *s ++ "!"*. 
 -/
 
 def exclaim : String → String 
-| s => s ++ "!"    -- with s bound to first argument value
+| s => s ++ "!"    
 
 #eval exclaim "Hello"             -- apply it once
 #eval exclaim (exclaim "Hello")   -- apply it twice
@@ -326,25 +337,29 @@ def apply2_string : (String → String) → String → String
 #eval apply2_string exclaim "Hello" -- expect "Hello!!"
 
 /-!
+It works!
+-/
+
+/-!
 ## Generalizing the Type of Objects Handled
 
 At this point it should be clear, by analogy
 with earlier material, that we can generalize
-over the specific Nat and String types in the
-previous examples to write a version of apply2
+from the specific Nat and String types, in the
+previous examples, to write a version of apply2
 that can handle objects of any type, α. The
-trick, as usual, is to add handle variation in
+trick, as usual, is to handle the variation in
 object types by adding a type *parameter*.
 -/
 
-def apply2 : (α : Type) → (α → α) → α → α  
+def apply2' : (α : Type) → (α → α) → α → α  
 | _, f, a => f (f a)
 
 /-
 Let's explain this function in detail:
 
 - def is the keyword for binding names to values
-- apply2 is the name of our new function
+- apply2' is the name of our new function
 - the type of the function is give after the :
 - the function takes three arguments:
   - a type value, α, such as Nat or String
@@ -360,10 +375,10 @@ Let's explain this function in detail:
 We can now try it out to see that it works!
 -/
 
-#eval apply2 Nat Nat.succ 0         -- expect 2
-#eval apply2 Nat double 1           -- expect 4
-#eval apply2 Nat square 2           -- expect 16
-#eval apply2 String exclaim "Hello" -- "Hello!!" 
+#eval apply2' Nat Nat.succ 0         -- expect 2
+#eval apply2' Nat double 1           -- expect 4
+#eval apply2' Nat square 2           -- expect 16
+#eval apply2' String exclaim "Hello" -- "Hello!!" 
 
 /-!
 ## Type Inference and Implicit Arguments
@@ -379,26 +394,31 @@ the following test cases should work.
 
 -- Answer:
 
-def apply2' : { α : Type } → (α → α) → α → α 
+def apply2 : { α : Type } → (α → α) → α → α 
 | _, f, a => f (f a)
 
 -- Now the type arguments are implicit!
-#eval apply2' Nat.succ 0   -- expect 2
-#eval apply2' double 1     -- expect 4
-#eval apply2' square 2     -- expect 16
-#eval apply2' exclaim "Hello" -- Hello!!
+#eval apply2 Nat.succ 0   -- expect 2
+#eval apply2 double 1     -- expect 4
+#eval apply2 square 2     -- expect 16
+#eval apply2 exclaim "Hello" -- Hello!!
 
 /-!
-Yay! This example is an important achievement. 
+This example is an important achievement. 
 It exhibits the following fundamental concepts:
-- types and values; every value has a type
+- every value has a type
 - types are values too; their type is Type
 - types parameters make definitions polymorphic
-- types can be inferred and can remain implicit
+- type arguments can be implicit and inferred
 - functions are values, too, and can be arguments
 
 With all the work required to get to this point
 now in hand, we're ready to introduce a new and
-important concept in mathematics. It will be the
-subject of your first homework assignment. 
--/
+important concept in mathematics. 
+
+Note: The concept is introduced as a homework
+assignment, then reviewed in class. Once it's
+done, this lecture then continues to completion.
+-/ 
+
+end lecture_03_04 
