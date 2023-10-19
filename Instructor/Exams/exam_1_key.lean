@@ -1,9 +1,12 @@
 /-!
 # UVa CS2120-002 F23 Midterm Exam
 
+The first section of this exam just repeats our definition
+of propositional logic syntax and semantics. Skip ahead to
+the second section to find the exam.
+-/
 
-
-
+/-!
 ## Propositional Logic: Syntax, Sematics, Satisfiability
 
 This section of the exam simply includes our formal 
@@ -27,6 +30,8 @@ inductive binary_op : Type
 
 -- expressions (abstract syntax)
 inductive Expr : Type
+| true_exp 
+| false_exp 
 | var_exp (v : var)
 | un_exp (op : unary_op) (e : Expr)
 | bin_exp (op : binary_op) (e1 e2 : Expr)
@@ -38,6 +43,9 @@ infixr:35 " ∧ " => Expr.bin_exp binary_op.and
 infixr:30 " ∨ " => Expr.bin_exp binary_op.or 
 infixr:25 " ⇒ " =>  Expr.bin_exp binary_op.imp
 infixr:20 " ⇔ " => Expr.bin_exp binary_op.iff 
+notation " ⊤ " => Expr.top_exp
+notation " ⊥ " => Expr.bot_exp
+
 
 /-!
 ### Semantics
@@ -69,6 +77,8 @@ def Interp := var → Bool
 
 -- The meanings of expressions "under" given interpretations
 def eval_expr : Expr → Interp → Bool 
+| Expr.true_exp,           _ => true
+| Expr.false_exp,          _ => false
 | (Expr.var_exp v),        i => i v
 | (Expr.un_exp op e),      i => (eval_un_op op) (eval_expr e i)
 | (Expr.bin_exp op e1 e2), i => (eval_bin_op op) (eval_expr e1 i) (eval_expr e2 i)
@@ -149,6 +159,8 @@ where mk_interps_helper : (rows : Nat) → (vars : Nat) → List Interp
 
 -- Count the number of variables in a given expression
 def max_variable_index : Expr → Nat
+| Expr.true_exp => 0
+| Expr.false_exp => 0
 | Expr.var_exp (var.mk i) => i
 | Expr.un_exp _ e => max_variable_index e
 | Expr.bin_exp _ e1 e2 => max (max_variable_index e1) (max_variable_index e2)
@@ -184,17 +196,194 @@ def is_sat : Expr → Bool := λ e : Expr => reduce_or (truth_table_outputs e)
 def is_valid : Expr → Bool := λ e : Expr => reduce_and (truth_table_outputs e)
 def is_unsat : Expr → Bool := λ e : Expr => not (is_sat e)
 
+
+
+
+
 /-!
-### Quick Demo
+****************
+****************
+EXAM STARTS HERE
+****************
+****************
 -/
 
--- some atomic/variable expressions
-def Bread  : Expr := {var.mk 0}
-def Cheese : Expr := {var.mk 1}
-def Jam    : Expr := {var.mk 2}
+/-!
+## #1 Proofs as Programs 
 
-#eval is_sat (Bread)
-#eval is_sat (Bread ∧ ¬Bread)
-#eval is_valid (Bread ∧ ¬Bread)
-#eval is_valid (Bread ∨ ¬Bread)
-#eval is_unsat (Bread ∧ ¬Bread)
+### a. And elimination [15 points]
+
+Prove, by completing the following function definition, that 
+from a value of type α × β one can always derive a value of 
+type α.
+-/
+
+-- Your answer here
+
+def and_elimination {α β : Type} : α × β → α 
+| (a, _) => a 
+
+/-!
+### b. Funny transitivity [15 points]
+
+Prove, by completing the following function definition, that
+(α → β) × (β → γ) → (α → γ). In other words, if you have a
+pair of functions, one converting α to β and one converting
+β to γ, then you can always construct a function from α to γ.  
+-/
+
+-- Your answer here
+
+def funny_transitivity {α β γ : Type} : (α → β) × (β → γ) → (α → γ)
+| (f, g) => λ a => g (f a)
+
+
+/-!
+### c. Ex empty quodlibet [15 points]
+
+Prove that if a type, α, is uninhabited then from an 
+assumed value (a : α) one can always derive a value of 
+*any* type, β. 
+-/
+
+-- Your answer here
+
+def ex_empty {α β : Type} : (α → Empty) → α → β
+| f, a => nomatch (f a)
+
+/-!
+## #2 Data Types
+
+### a. Enumerated Types [10 points]
+
+Define three enumerated types, called Bread, Spread, 
+and Cheese, where the values of type Bread are white and 
+wheat; the values of type Spread are jam and pesto;
+and the values of type Cheese are cheddar and brie.
+-/
+
+-- Your answers here
+
+inductive Bread : Type 
+| white
+| wheat
+
+inductive Cheese : Type
+| cheddar
+| brie
+
+inductive Spread : Type
+| jam
+| pesto
+
+/-!
+### b. An interesting inductive type [15 points]
+
+Define a data type called Sandwich: with one constructor
+called mk taking as its arguments a choice of bread and 
+*either (but not both)* a choice of Cheese or a choice of
+Spread. Hint: Remember how to define a type that carries 
+a value of either one type or another. Extra credit for 
+using *structure* instead of *inductive* to declare the
+Sandwich type.
+-/
+
+-- Your answer here
+
+structure Sandwich : Type :=
+(bread : Bread)
+(cheese_or_spread : Cheese ⊕ Spread)
+
+/-!
+### c. Now make yourself a Sandwich! [15 points]
+
+Define jam_sandwhich to be a Sandwhich made with 
+wheat bread and jam. You have to use Sandwich.mk 
+to create a term representing a sandwich with wheat
+bread and jam as a spread.
+-/
+
+-- Your answer here
+
+def jam_sandwich := Sandwich.mk Bread.wheat (Sum.inr Spread.jam)
+
+
+/-! 
+### #3 Recursive Data and Functions [15 points]
+
+In our implementation of propositional logic, we defined a 
+function, *bit_list_to_bool_list*, to convert a list of Nat 
+to a corresponding list of Bool. Here's the definition (with
+a tick mark on the name).
+-/
+
+def bit_list_to_bool_list' : List Nat → List Bool
+| [] => []
+| h::t => (bit_to_bool h) :: (bit_list_to_bool_list t)
+
+-- expect [true, false, true, false, true]
+#eval bit_list_to_bool_list [1, 0, 3, 0, 1]
+
+/-!
+Your job is to generalize this solution by defining a new
+function, called *map*. Generalize the types, Nat and Bool,
+to arbitrary types, α and β. Generalize *bit_to_bool* to 
+be any function for converting an individual α value into
+a corresponding β value. Your map function will thus take
+as its arguments (1) type parameters (make them implicit), 
+(2) a function for converting elements, and (3) a List of 
+α values, and will return a correspond List of β values.  
+-/
+
+-- Your answer here
+
+def map {α β : Type} : (α → β) → List α → List β 
+| _, [] => []
+| f, h::t => f h :: map f t
+
+-- test case: use map instead of bit_list_to_bool_list
+-- expect [true, false, true, false, true]
+#eval map bit_to_bool [1, 0, 1, 0, 1]
+
+
+/-!
+## #4 Propositional Logic [Extra Credit, for the A+]
+
+Propositional logic as we've formulate it has variable
+expressions (atomic expressions), and larger expressions
+built by applying connectives (∧, ∨, ¬, ⇒, ⇔) to smaller
+expressions. 
+
+Some formalizations of propositional logic also include
+the *constant* expressions *True* and *False*. In concrete
+syntax, they are sometimes written as ⊤ (pronounced *top*) 
+and ⊥ (bottom). Semantically ⊤ evaluates to Boolean true
+and ⊥ evaluates to Boolean false.
+
+### a. Extend Syntax and Semantics
+
+Your job is to extend our syntax and semantics to include
+⊤ and ⊥ as valid expressions. You will have to carry out
+the following tasks.
+
+- add true_exp and false_exp as constructors in Expr
+- note that we've already added concrete notation definitions
+- add rules for evaluating these expressions to eval_expr
+- add rules for these expressions to max_variable_index
+
+When you're done, the following logic should evaluate 
+without error.
+-/
+
+def X := {var.mk 0}
+#eval is_sat (X ⇒ ⊥)  -- expect true
+
+/-! 
+### b. Give a model for (X ⇒ ⊥)
+
+Recall that a model is a binding of values to variables
+that makes a proposition true. What value must X have to
+make (X ⇒ ⊥) true?
+
+-- Answer: {X is _____ } is a model of (X ⇒ ⊥)
+-/
