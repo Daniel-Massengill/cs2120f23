@@ -220,5 +220,5 @@ example (A B : Prop) : ¬(A ∧ B) → ¬A ∨ ¬B :=
   match proof_of_aornota with
   | Or.inl a => match proof_of_bornotb with
                 |Or.inl b => False.elim (nab (And.intro a b))
-                |Or.inr nb => Or.inr nb 
-  | Or.inr na => Or.inl na              
+                |Or.inr nb => Or.inr nb
+  | Or.inr na => Or.inl na

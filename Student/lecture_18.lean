@@ -128,7 +128,7 @@ def square_pairs : Set (Nat × Nat) := { p : Nat × Nat | square_pair (p.1, p.2)
 def pythagorean_triple : Nat → Nat → Nat → Prop
 | h, x, y => h^2 = x^2 + y^2
 
-def py_trips : Set (Nat × Nat × Nat) := { t | t.1^2 = t.2.1^2 + t.2.2^2} 
+def py_trips : Set (Nat × Nat × Nat) := { t | t.1^2 = t.2.1^2 + t.2.2^2}
 
 /-!
 ### Exercises
