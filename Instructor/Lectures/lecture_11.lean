@@ -396,7 +396,7 @@ infixr:25 " ⇒ " =>  bin_exp binary_op.imp
 infixr:20 " ⇔ " => bin_exp binary_op.iff 
 
 --  Now we have a "concrete" syntax for our language!
-def e0 := {v₀}
+ndef e0 := {v₀}
 def e1 := ¬e0
 def e2 := e0 ∧ e1
 def e3 := e0 ∨ e1
